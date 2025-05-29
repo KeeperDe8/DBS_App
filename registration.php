@@ -212,7 +212,7 @@
   validateField(lastName, isNotEmpty);
   validateField(password, isPasswordValid);
   checkUsernameAvailability(username);
-  checkEmailAvailability(email);
+  
  
   // Form submission validation
   document.getElementById('registrationForm').addEventListener('submit', function (e) {
