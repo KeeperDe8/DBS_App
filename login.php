@@ -2,7 +2,7 @@
 
   session_start();
 
-  if (!isset($_SESSION['admin_id'])) {
+  if (isset($_SESSION['admin_ID'])) {
       header('Location: index.php');
       exit();
     }
