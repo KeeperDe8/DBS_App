@@ -11,7 +11,88 @@
     require_once('classes/database.php');
     $con = new database();
 
-    $data = $con->opencon();
+    $sweetAlertConfig = "";
+
+
+     if (isset($_POST['add_student'])){
+     
+      $firstname = $_POST['first_name'];
+      $lastname = $_POST['last_name'];
+      $email = $_POST['email'];
+      $admin_id = $_SESSION['admin_ID'];
+    
+ 
+      $userID = $con->addStudent($firstname, $lastname, 
+      $email, $admin_id);
+     
+      if ($userID) {
+        $sweetAlertConfig = "
+        <script>
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful',
+          text: 'You have successfully registered as an admin.',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          window.location.href = 'index.php';
+        });
+        </script>
+        ";
+      } else {
+        $sweetAlertConfig = "
+         <script>
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: 'An error occurred during registration. Please try again.',
+          confirmButtonText: 'OK'
+        });
+        </script>"
+       
+        ;
+      }
+    }
+  
+    if (isset($_POST['add_course'])){
+     
+      $course_name = $_POST['course_name'];
+      $admin_id = $_SESSION['admin_ID'];
+      
+    
+ 
+      $userID = $con->addCourse($course_name, $admin_id);
+     
+      if ($userID) {
+        $sweetAlertConfig = "
+        <script>
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful',
+          text: 'You have successfully registered as an admin.',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          window.location.href = 'index.php';
+        });
+        </script>
+        ";
+      } else {
+        $sweetAlertConfig = "
+         <script>
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: 'An error occurred during registration. Please try again.',
+          confirmButtonText: 'OK'
+        });
+        </script>"
+       
+        ;
+      }
+    }
+
+
+      
+
     
 ?>
 <!DOCTYPE html>
@@ -20,6 +101,7 @@
   <meta charset="UTF-8">
   <title>Student & Course CRUD (PHP PDO)</title>
   <link rel="stylesheet" href="./bootstrap-5.3.3-dist/css/bootstrap.css">
+  <script src="./package/dist/sweetalert2.js"></script>
 </head>
 <body class="bg-light">
   <div class="container py-5">
@@ -99,7 +181,7 @@
   <!-- Add Student Modal -->
   <div class="modal fade" id="addStudentModal" tabindex="-1">
     <div class="modal-dialog">
-      <form class="modal-content" method="POST" action="create.php">
+      <form class="modal-content" method="POST" action="">
         <div class="modal-header">
           <h5 class="modal-title">Add Student</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -108,11 +190,13 @@
           <input type="text" name="first_name" class="form-control mb-2" placeholder="First Name" required>
           <input type="text" name="last_name" class="form-control mb-2" placeholder="Last Name" required>
           <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
-          <input type="text" name="course" class="form-control" placeholder="Course">
         </div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Add</button>
+          <button type="submit" name="add_student">Add</button>
         </div>
+           <script src="./bootstrap-5.3.3-dist/js/bootstrap.js"></script>
+           <script src="./package/dist/sweetalert2.js"></script>
+           <?php echo $sweetAlertConfig; ?>
       </form>
     </div>
   </div>
@@ -120,20 +204,26 @@
   <!-- Add Course Modal -->
   <div class="modal fade" id="addCourseModal" tabindex="-1">
     <div class="modal-dialog">
-      <form class="modal-content" method="POST" action="add_course.php">
+      <form id="courseForm" class="modal-content" method="POST" action="">
         <div class="modal-header">
           <h5 class="modal-title">Add Course</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <input type="text" name="course_name" class="form-control mb-2" placeholder="Course Name" required>
+          <input type="text" name="course_name" id="course_name" class="form-control mb-2" placeholder="Course Name" required>
         </div>
+        <div class="invalid-feedback">Put Course.</div>
         <div class="modal-footer">
-          <button type="submit" class="btn btn-success">Add Course</button>
+          <button type="submit" id="courseButton" name="add_course" class="btn btn-success">Add Course</button>
         </div>
+         <script src="./bootstrap-5.3.3-dist/js/bootstrap.js"></script>
+           <script src="./package/dist/sweetalert2.js"></script>
+           <?php echo $sweetAlertConfig; ?>
       </form>
     </div>
   </div>
+
+
 
   <!-- Enroll Student Modal -->
   <div class="modal fade" id="enrollStudentModal" tabindex="-1">
@@ -164,5 +254,88 @@
   </div>
 
   <script src="./bootstrap-5.3.3-dist/js/bootstrap.js"></script>
+
+
+
+<script> 
+
+  // Send AJAX request to check username availability username
+   const checkCourseAvailability = (courseField) => {
+    courseField.addEventListener('input', () => {
+      const course_name = courseField.value.trim();
+ 
+      if (courseField === '') {
+        courseField.classList.remove('is-valid');
+        courseField.classList.add('is-invalid');
+        courseField.nextElementSibling.textContent = 'Email is required.';
+        courseButton.disabled = true; //disabled the button
+        return;
+      }
+      fetch('ajax/check_course.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `course_name=${encodeURIComponent(course_name)}`,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.exists) {
+            courseField.classList.remove('is-valid');
+            courseField.classList.add('is-invalid');
+            courseField.nextElementSibling.textContent = 'Course is already Exist.';
+            courseButton.disabled = true; //disabled the button
+          } else {
+            courseField.classList.remove('is-invalid');
+            courseField.classList.add('is-valid');
+            courseField.nextElementSibling.textContent = '';
+            courseButton.disabled = false; //disabled the button
+          }
+           
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+            courseButton.disabled = true; //disabled the button
+      
+        });
+ 
+ });
+  };
+
+ 
+
+
+ 
+  // Get form fields
+  
+  const course_name = document.getElementById('course_name');
+ 
+  // Attach real-time validation to each field
+  checkCourseAvailability(course_name);
+  
+ 
+  // Form submission validation
+  document.getElementById('courseForm').addEventListener('submit', function (e) {
+   // e.preventDefault(); // Prevent form submission for validation
+ 
+    let isValid = true;
+ 
+    // Validate all fields on submit
+    [courseField].forEach((field) => {
+      if (!field.classList.contains('is-valid')) {
+        field.classList.add('is-invalid');
+        isValid = false;
+      }
+    });
+ 
+    // If all fields are valid, submit the form
+    if (isValid) {
+      this.submit();
+    }
+  });
+</script>
+  <link rel="stylesheet" href="./bootstrap-5.3.3-dist/css/bootstrap.css">
+  <link rel="stylesheet" href="./package/dist/sweetalert2.css">
+
 </body>
 </html>
