@@ -14,6 +14,8 @@ class database{
  
 
 }
+
+
 function signupUser($firstname, $lastname, $username, $email, $password) {
     $con = $this->opencon();
 
@@ -36,6 +38,8 @@ function signupUser($firstname, $lastname, $username, $email, $password) {
     
 
 }
+
+
 function isUsernameExists($username){
     $con = $this->opencon();
     $stmt = $con->prepare("SELECT COUNT(*) FROM Admin WHERE admin_username = ?");
@@ -48,6 +52,7 @@ function isUsernameExists($username){
 
 }
 
+
 function isEmailExists($email){
     $con = $this->opencon();
     $stmt = $con->prepare("SELECT COUNT(*) FROM Admin WHERE admin_email = ?");
@@ -59,6 +64,7 @@ function isEmailExists($email){
 
 
 }
+
 
 function loginUser($username, $password) {
      $con = $this->opencon();
@@ -74,6 +80,7 @@ function loginUser($username, $password) {
         
 
 }
+
 
 function addStudent($firstname, $lastname, $email, $admin_id) {
     $con = $this->opencon();
@@ -135,5 +142,76 @@ function isCourseExists($course_name){
 }
 
 
+function getStudents() {
+    $con = $this->opencon();
+
+    return $con->query("SELECT * FROM students")->fetchAll();
+}
+
+
+function getStudentByID($student_id) {
+    $con = $this->opencon();
+    $stmt = $con->prepare("SELECT * FROM students WHERE student_id = ?");
+
+    $stmt->execute([$student_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+
+function getCourse() {
+    $con = $this->opencon();
+
+    return $con->query("SELECT * FROM courses")->fetchAll();
+
+}
+
+
+function getCourseByID($course_id) {
+    $con = $this->opencon();
+    $stmt = $con->prepare("SELECT * FROM courses WHERE course_id = ?");
+
+    $stmt->execute([$course_id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+
+}
+
+
+function updateStudents($first_name, $last_name, $email, $student_id) {
+
+    try{
+        $con = $this->opencon();
+        $con->beginTransaction();
+
+        $query = $con->prepare("UPDATE students SET student_FN=?, student_LN=?, student_email=?
+        WHERE student_id=?"); 
+        $query->execute([$first_name, $last_name, $email, $student_id]);
+
+        //Update successful
+        $con->commit();
+        return true;
+    }catch (PDOException $e) {
+        $con->rollBack();
+        return false;
+    }
+}
+
+
+function updateCourse($course_name, $course_id){
+
+    try{
+        $con = $this->opencon();
+        $con->beginTransaction();
+
+        $query = $con->prepare("UPDATE courses SET course_name=? WHERE course_id=?"); 
+        $query->execute([$course_name, $course_id]);
+
+        //Update successful
+        $con->commit();
+        return true;
+    }catch (PDOException $e) {
+        $con->rollBack();
+        return false;
+    }
+}
 
 }
